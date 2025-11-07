@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foguete Hub - Sistema de Detecção de Apogeu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, rgba(30, 30, 35, 0.95) 0%, rgba(25, 25, 30, 0.95) 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #64b5f6 0%, #81c784 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            color: #a0a0a0;
+            margin-top: 10px;
+        }
+
+        .nav-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 12px 30px;
+            border: 2px solid rgba(100, 181, 246, 0.5);
+            background: rgba(100, 181, 246, 0.1);
+            color: #64b5f6;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-btn:hover {
+            background: rgba(100, 181, 246, 0.2);
+            border-color: #64b5f6;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: rgba(100, 181, 246, 0.3);
+            border-color: #64b5f6;
+            box-shadow: 0 0 20px rgba(100, 181, 246, 0.3);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 2em;
+            margin-bottom: 30px;
+            color: #64b5f6;
+            border-bottom: 2px solid rgba(100, 181, 246, 0.3);
+            padding-bottom: 15px;
+        }
+
+        /* Seção de Código */
+        .code-image-container {
+            background: rgba(20, 20, 25, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+
+        .code-image-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            display: block;
+            filter: brightness(1) contrast(1);
+        }
+
+        /* Seção de Explicação */
+        .explanation-content {
+            background: rgba(20, 20, 25, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 40px;
+            line-height: 1.8;
+        }
+
+        .explanation-content h2 {
+            font-size: 1.5em;
+            color: #81c784;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 4px solid #81c784;
+            padding-left: 15px;
+        }
+
+        .explanation-content h3 {
+            font-size: 1.2em;
+            color: #64b5f6;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .explanation-content p {
+            margin-bottom: 15px;
+            color: #d0d0d0;
+        }
+
+        .state-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .state-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .state-card:hover {
+            background: rgba(100, 181, 246, 0.1);
+            border-color: #64b5f6;
+            transform: translateY(-2px);
+        }
+
+        .state-card-title {
+            color: #64b5f6;
+            font-weight: 600;
+            font-size: 1em;
+            margin-bottom: 8px;
+        }
+
+        .state-card-desc {
+            color: #d0d0d0;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .state-card-transition {
+            color: #81c784;
+            font-size: 0.85em;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        .explanation-content strong {
+            color: #81c784;
+        }
+
+        .explanation-content code {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #81c784;
+            font-family: 'Courier New', monospace;
+        }
+
+        .explanation-content pre {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid #81c784;
+        }
+
+        .explanation-content pre code {
+            background: none;
+            padding: 0;
+            color: #81c784;
+        }
+
+        .explanation-content ul,
+        .explanation-content ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .explanation-content li {
+            margin-bottom: 8px;
+        }
+
+        .explanation-content blockquote {
+            border-left: 4px solid #64b5f6;
+            padding-left: 15px;
+            margin: 20px 0;
+            color: #a0a0a0;
+            font-style: italic;
+        }
+
+        .physics-box {
+            background: rgba(129, 199, 132, 0.1);
+            border: 1px solid rgba(129, 199, 132, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #81c784;
+        }
+
+        .physics-box strong {
+            color: #81c784;
+        }
+
+        .code-box {
+            background: rgba(100, 181, 246, 0.1);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #64b5f6;
+        }
+
+        .code-box strong {
+            color: #64b5f6;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #707070;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .nav-btn {
+                width: 100%;
+            }
+
+            .explanation-content {
+                padding: 20px;
+            }
+
+            .section-title {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Foguete FDR</h1>
+            <p class="subtitle">Sistema de Detecção de Apogeu do foguete de reflorestamento</p>
+        </header>
+
+        <div class="nav-container">
+            <button class="nav-btn active" onclick="showSection('cpp')">
+                📋 Código C++ (Arduino)
+            </button>
+            <button class="nav-btn" onclick="showSection('python')">
+                🐍 Código Python (Simulação)
+            </button>
+            <button class="nav-btn" onclick="showSection('explicacao')">
+                📚 Explicação Técnica
+            </button>
+        </div>
+
+        <!-- Seção C++ -->
+        <div id="cpp" class="content-section active">
+            <h2 class="section-title">Código C++ - Arduino Uno</h2>
+            <p style="margin-bottom: 20px; color: #a0a0a0;">
+                Implementação completa da lógica de detecção de apogeu em C++ para Arduino Uno,
+                utilizando os sensores MPU6050 (Acelerômetro) e BMP280 (Barômetro).
+            </p>
+            <div class="code-image-container">
+                <img src="fogete_2v.png" alt="Código C++ Arduino">
+            </div>
+        </div>
+
+        <!-- Seção Python -->
+        <div id="python" class="content-section">
+            <h2 class="section-title">Código Python - Simulação</h2>
+            <p style="margin-bottom: 20px; color: #a0a0a0;">
+                Simulação da lógica de detecção de apogeu em Python, útil para entender
+                e testar o algoritmo sem a necessidade do hardware Arduino.
+            </p>
+            <div class="code-image-container">
+                <img src="fogete_2vpy.png" alt="Código Python Simulação">
+            </div>
+        </div>
+
+        <!-- Seção Explicação -->
+        <div id="explicacao" class="content-section">
+            <h2 class="section-title">Explicação Técnica</h2>
+            <div class="explanation-content">
+                <h2>Lógica de Detecção de Apogeu e Cálculos Barométricos para Foguetes</h2>
+
+                <p>Este documento detalha a lógica implementada no código Arduino para o sistema de bordo de um foguete, com foco na detecção do apogeu (altitude máxima) e no uso do sensor barométrico BMP280 para o cálculo de altitude. Abordaremos tanto os princípios físicos quanto a implementação em código.</p>
+
+                <h2>1. Fundamentos Físicos do Voo de Foguetes</h2>
+
+                <p>Um foguete segue uma trajetória determinada pelas leis da física clássica. Durante o voo, o foguete passa por diferentes fases, cada uma com características dinâmicas distintas:</p>
+
+                <div class="physics-box">
+                    <strong>Fase de Propulsão:</strong> O motor está ligado, gerando empuxo (força ascendente). A aceleração do foguete é positiva e dirigida para cima. A equação fundamental é F = ma, onde F é o empuxo do motor menos o peso do foguete.
+                </div>
+
+                <div class="physics-box">
+                    <strong>Fase de Costa (Coasting):</strong> O motor foi desligado. O foguete continua subindo por inércia, mas agora apenas a gravidade atua sobre ele, causando uma desaceleração constante de aproximadamente 9.81 m/s² (1G). A velocidade vertical diminui linearmente até atingir zero no apogeu.
+                </div>
+
+                <div class="physics-box">
+                    <strong>Apogeu:</strong> É o ponto onde a velocidade vertical do foguete é exatamente zero. Neste instante, o foguete atinge sua altitude máxima. Matematicamente, é o ponto onde dv/dt = 0 e a aceleração muda de negativa (desaceleração) para positiva (aceleração descendente).
+                </div>
+
+                <p>A detecção precisa do apogeu é crítica porque:</p>
+                <ul>
+                    <li>Se o paraquedas for ejetado antes do apogeu, o foguete ainda estará subindo e pode danificar o sistema de recuperação.</li>
+                    <li>Se o paraquedas for ejetado muito depois, o foguete ganhará velocidade na descida, aumentando o risco de impacto.</li>
+                    <li>A ejeção no apogeu garante a menor velocidade possível no momento da abertura do paraquedas.</li>
+                </ul>
+
+                <h2>2. Lógica de Detecção de Apogeu (Altitude Máxima)</h2>
+
+                <p>A detecção do apogeu é o momento mais crítico para o acionamento do sistema de recuperação (ejeção do paraquedas). A lógica implementada no código utiliza uma <strong>Máquina de Estados</strong> para rastrear a fase do voo e uma técnica de <strong>comparação de altitude</strong> para identificar o apogeu.</p>
+
+                <h3>2.1. A Máquina de Estados do Voo</h3>
+
+                <p>O código divide o voo em cinco estados principais, que simplificam a lógica de decisão:</p>
+
+                <div class="state-cards">
+                    <div class="state-card">
+                        <div class="state-card-title">🟢 PRONTO_PARA_LANCAR</div>
+                        <div class="state-card-desc">O foguete está no solo, aguardando o lançamento.</div>
+                        <div class="state-card-transition"><strong>Transição:</strong> Aceleração > 1.5G E altitude > 5m</div>
+                    </div>
+                    <div class="state-card">
+                        <div class="state-card-title">🔴 PROPULSAO</div>
+                        <div class="state-card-desc">O motor está ligado e o foguete está acelerando.</div>
+                        <div class="state-card-transition"><strong>Transição:</strong> Aceleração < 1.2G</div>
+                    </div>
+                    <div class="state-card">
+                        <div class="state-card-title">🟡 COSTA</div>
+                        <div class="state-card-desc">Motor desligado, foguete subindo por inércia. Apogeu detectado aqui.</div>
+                        <div class="state-card-transition"><strong>Transição:</strong> Altitude < Máxima (sustentado)</div>
+                    </div>
+                    <div class="state-card">
+                        <div class="state-card-title">⭐ APOGEU_DETECTADO</div>
+                        <div class="state-card-desc">O apogeu foi confirmado.</div>
+                        <div class="state-card-transition"><strong>Transição:</strong> Imediata para RECUPERACAO</div>
+                    </div>
+                    <div class="state-card">
+                        <div class="state-card-title">🔵 RECUPERACAO</div>
+                        <div class="state-card-desc">Paraquedas ejetado, foguete descendo.</div>
+                        <div class="state-card-transition"><strong>Transição:</strong> Nenhuma, apenas monitoramento</div>
+                    </div>
+                </div>
+
+                <h3>2.2. O Algoritmo de Detecção de Apogeu</h3>
+
+                <p>A detecção real do apogeu ocorre durante o estado <strong>COSTA</strong>. O princípio é simples: <strong>o apogeu é alcançado quando a altitude para de subir e começa a cair.</strong></p>
+
+                <div class="code-box">
+                    <strong>Implementação em Pseudocódigo:</strong>
+                    <pre><code>SE estado == COSTA ENTAO
+    SE altitude_atual < altitude_maxima ENTAO
+        contador_apogeu = contador_apogeu + 1
+        SE contador_apogeu >= JANELA_APOGEU ENTAO
+            acionar_impulso()
+            estado = RECUPERACAO
+        FIM SE
+    SENAO
+        altitude_maxima = altitude_atual
+        contador_apogeu = 0
+    FIM SE
+FIM SE</code></pre>
+                </div>
+
+                <p><strong>Detalhamento do Algoritmo:</strong></p>
+
+                <ol>
+                    <li><strong>Rastreamento da Altitude Máxima:</strong> A variável <code>altitudeMaxima</code> armazena a maior altitude registrada desde o início do voo. Ela é atualizada continuamente enquanto o foguete está subindo.</li>
+
+                    <li><strong>Comparação Contínua:</strong> Em cada ciclo do loop principal (a cada 100ms no Arduino), a <code>altitudeAtual</code> é comparada com a <code>altitudeMaxima</code>.
+                        <ul>
+                            <li>Se <code>altitudeAtual > altitudeMaxima</code>: O foguete ainda está subindo. A <code>altitudeMaxima</code> é atualizada e o contador de apogeu é zerado.</li>
+                            <li>Se <code>altitudeAtual < altitudeMaxima</code>: O foguete começou a cair. O contador de apogeu (<code>contadorApogeu</code>) é incrementado.</li>
+                        </ul>
+                    </li>
+
+                    <li><strong>Janela de Confirmação (JANELA_APOGEU):</strong> Para evitar que ruídos ou pequenas flutuações do sensor acionem o paraquedas prematuramente, o código exige que a queda de altitude seja sustentada por um número específico de leituras consecutivas. No código, <code>JANELA_APOGEU = 10</code>, o que significa 10 ciclos × 100ms = 1 segundo de queda confirmada.
+                        <ul>
+                            <li>Somente quando <code>contadorApogeu >= JANELA_APOGEU</code> é que o apogeu é <strong>confirmado</strong> e o impulso elétrico é acionado.</li>
+                            <li>Isso garante que pequenas flutuações de pressão (causadas por vento ou ruído eletrônico) não disparem falsamente o sistema.</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <p>Este método é robusto e amplamente utilizado em projetos de foguetes amadores, pois depende apenas da mudança de tendência da altitude, e não de um valor absoluto predefinido. Isso o torna adaptável a diferentes locais de lançamento e condições atmosféricas.</p>
+
+                <h2>3. Cálculo de Altitude com o Barômetro (BMP280)</h2>
+
+                <p>O sensor BMP280 mede a pressão atmosférica e a temperatura. A altitude é calculada a partir da pressão, pois a pressão do ar diminui exponencialmente com a altitude. Este é um princípio fundamental da meteorologia e da aerodinâmica.</p>
+
+                <h3>3.1. Fundamentos Físicos da Pressão Atmosférica</h3>
+
+                <div class="physics-box">
+                    <strong>Lei Barométrica:</strong> A pressão atmosférica diminui exponencialmente com a altitude. Isso ocorre porque a atmosfera é comprimida pelo seu próprio peso. Quanto mais alto você vai, menos ar há acima de você, resultando em menor pressão.
+                </div>
+
+                <p>A relação entre pressão e altitude é descrita pela Equação Hipsométrica, que é derivada das leis da termodinâmica e da hidrostática. A fórmula simplificada usada em sensores barométricos é:</p>
+
+                <h3>3.2. A Fórmula Barométrica</h3>
+
+                <p>A biblioteca <code>Adafruit_BMP280</code> utiliza a fórmula barométrica padrão para calcular a altitude em metros:</p>
+
+                <pre><code>h = 44330 × [1 - (P / P0)^(1/5.255)]</code></pre>
+
+                <p>Onde:</p>
+                <ul>
+                    <li><strong>h:</strong> Altitude em metros</li>
+                    <li><strong>P:</strong> Pressão atual medida pelo sensor BMP280 (em hPa)</li>
+                    <li><strong>P0:</strong> Pressão de referência ao nível do mar (em hPa)</li>
+                    <li><strong>5.255:</strong> Constante derivada da razão de calores específicos do ar (γ = 1.4) e da constante dos gases</li>
+                </ul>
+
+                <div class="physics-box">
+                    <strong>Derivação da Constante 5.255:</strong> Esta constante vem da relação: (2/5.255) = 2g/(R×T0), onde g é a aceleração da gravidade, R é a constante específica do ar, e T0 é a temperatura de referência. O valor 44330 é uma constante empírica que ajusta a fórmula para metros.
+                </div>
+
+                <h3>3.3. A Importância da Pressão de Referência</h3>
+
+                <p>No código, a função <code>bmp.readAltitude(1013.25)</code> é utilizada. O valor <code>1013.25</code> é a pressão atmosférica padrão internacional ao nível do mar (em hPa).</p>
+
+                <blockquote>
+                    <strong>Atenção:</strong> Para obter a altitude mais precisa, é crucial que você substitua <code>1013.25</code> pela pressão atmosférica real no nível do mar no dia e local do lançamento. Você pode obter este valor em estações meteorológicas locais ou aplicativos de previsão do tempo.
+                </blockquote>
+
+                <ul>
+                    <li><strong>Altitude Absoluta:</strong> Se você usar a pressão padrão (1013.25 hPa), o sensor retornará a altitude <strong>absoluta</strong> do foguete em relação ao nível do mar padrão. Isso é útil para registros, mas pode ter erros de até 100-200 metros dependendo das condições atmosféricas do dia.</li>
+                    <li><strong>Altitude Relativa (Recomendado para Foguetes):</strong> Para fins de foguetismo, o que importa é a <strong>altitude relativa</strong> (a altura acima do ponto de lançamento). O código resolve isso subtraindo a <code>altitudeInicial</code> (a altitude medida no solo no momento do lançamento) da <code>altitudeAtual</code>.</li>
+                </ul>
+
+                <pre><code>altitudeRelativa = altitudeAtual - altitudeInicial</code></pre>
+
+                <p>Esta abordagem é muito mais precisa porque os erros sistemáticos (causados pela pressão de referência incorreta) se cancelam quando você subtrai duas medições do mesmo sensor.</p>
+
+                <h3>3.4. Filtro de Média Móvel (Suavização de Dados)</h3>
+
+                <p>Sensores barométricos são sensíveis a pequenas variações de pressão. Vários fatores podem causar flutuações nas leituras:</p>
+
+                <ul>
+                    <li><strong>Ruído eletrônico:</strong> Interferência eletromagnética no circuito do sensor.</li>
+                    <li><strong>Rajadas de vento:</strong> Variações locais de pressão causadas por movimentos de ar.</li>
+                    <li><strong>Vibrações do foguete:</strong> Oscilações mecânicas que afetam o sensor.</li>
+                    <li><strong>Resolução limitada do sensor:</strong> O BMP280 tem uma resolução de aproximadamente ±1 Pa, o que corresponde a ±0.08 metros.</li>
+                </ul>
+
+                <p>Para mitigar isso, o código implementa um <strong>Filtro de Média Móvel</strong> simples:</p>
+
+                <div class="code-box">
+                    <strong>Implementação do Filtro:</strong>
+                    <pre><code>FUNCAO calcularAltitudeMedia(novaLeitura)
+    historico[indice] = novaLeitura
+    indice = (indice + 1) MOD NUM_AMOSTRAS
+
+    soma = 0
+    PARA i = 0 ATE NUM_AMOSTRAS - 1 FACA
+        soma = soma + historico[i]
+    FIM PARA
+
+    RETORNA soma / NUM_AMOSTRAS
+FIM FUNCAO</code></pre>
+                </div>
+
+                <ul>
+                    <li>A função <code>calcularAltitudeMedia()</code> armazena as últimas <code>NUM_AMOSTRAS</code> leituras de altitude em um array circular.</li>
+                    <li>A altitude final (<code>altitudeAtual</code>) é a média aritmética dessas amostras.</li>
+                    <li>Com <code>NUM_AMOSTRAS = 5</code> e um ciclo de 100ms, o filtro suaviza dados em uma janela de 500ms.</li>
+                    <li>Isso "suaviza" a curva de altitude, tornando a detecção de apogeu mais confiável, pois ignora picos e vales de curta duração.</li>
+                </ul>
+
+                <div class="physics-box">
+                    <strong>Efeito do Filtro:</strong> Um filtro de média móvel é um filtro passa-baixa que atenua componentes de alta frequência (ruído) enquanto preserva a tendência geral (sinal útil). A frequência de corte é aproximadamente f_c = 1 / (2π × τ), onde τ é a constante de tempo do filtro.
+                </div>
+
+                <h2>4. Integração: Física + Programação</h2>
+
+                <p>O sistema completo funciona integrando os princípios físicos com a lógica de programação:</p>
+
+                <ol>
+                    <li><strong>Aquisição de Dados:</strong> O Arduino lê continuamente o acelerômetro (MPU6050) e o barômetro (BMP280) a cada 100ms.</li>
+                    <li><strong>Processamento:</strong> Os dados brutos são filtrados (média móvel) para reduzir ruído.</li>
+                    <li><strong>Análise de Estado:</strong> A máquina de estados determina em qual fase do voo o foguete se encontra baseado na aceleração.</li>
+                    <li><strong>Detecção de Apogeu:</strong> Durante a fase COSTA, o algoritmo monitora a tendência da altitude. Quando detecta uma queda sustentada, confirma o apogeu.</li>
+                    <li><strong>Ação:</strong> O impulso elétrico é acionado para ejetar o paraquedas.</li>
+                </ol>
+
+                <p>Este fluxo garante que o paraquedas seja ejetado no momento mais seguro e eficiente do voo.</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Foguete Hub © 2025 | Sistema de Detecção de Apogeu para Arduino Uno</p>
+        </footer>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Esconde todas as seções
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove a classe active de todos os botões
+            const buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+
+            // Mostra a seção selecionada
+            document.getElementById(sectionId).classList.add('active');
+
+            // Adiciona a classe active ao botão clicado
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
